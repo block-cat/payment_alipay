@@ -74,6 +74,16 @@ class AcquirerAlipay(models.Model):
                                          passback_params=passback_params)
 
     @api.multi
+    def alipay_compute_fees(self, amount, currency_id, country_id):
+        """
+            支付宝也是要恰饭的
+            单笔费率 0.6%
+        """
+        if not self.fees_active:
+            return 0.0
+        return self.fees_dom_var / 100 * amount
+
+    @api.multi
     def alipay_get_form_action_url(self):
         return "/payment_alipay/jump"
 
