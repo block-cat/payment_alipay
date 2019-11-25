@@ -10,7 +10,7 @@ odoo 支付宝支付模块
 
 python >= 3.6
 
-odoo == 12.0
+odoo == 11.0
 
 ## Main functionalities
 

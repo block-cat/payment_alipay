@@ -7,6 +7,8 @@ import base64
 from urllib.parse import quote_plus
 from odoo.exceptions import ValidationError
 import logging
+import dateutil
+import pytz
 
 _logger = logging.getLogger(__name__)
 
@@ -153,14 +155,27 @@ class TxAlipay(models.Model):
             [('provider', '=', 'alipay')], limit=1)
         alipay = payment._get_alipay()
         res = alipay.pay.trade_query(out_trade_no=data["out_trade_no"])
-        # 校验结果
+        # 校验结果 send_pay_date
         if res["code"] == "10000" and res["trade_status"] in ("TRADE_SUCCESS", "TRADE_FINISHED"):
             _logger.info(f"支付单：{data['out_trade_no']} 已成功付款")
-            self._set_transaction_done()
+            try:
+                # dateutil and pytz don't recognize abbreviations PDT/PST
+                tzinfos = {
+                    'PST': -8 * 3600,
+                    'PDT': -7 * 3600,
+                }
+                date_validate = dateutil.parser.parse(
+                    res.get('payment_date'), tzinfos=tzinfos).astimezone(pytz.utc)
+            except:
+                date_validate = fields.Datetime.now()
+            result.update(state='done', date_validate=date_validate)
+            # self._set_transaction_done()
         if res["code"] == "10000" and res["trade_status"] == "WAIT_BUYER_PAY":
             _logger.info(f"支付单：{data['out_trade_no']} 正等待付款...")
-            self._set_transaction_pending()
+            res.update(state='pending', state_message='Waiting for Pay')
+            # self._set_transaction_pending()
         if res["code"] == "10000" and res["trade_status"] == "TRADE_CLOSED":
             _logger.info(f"支付单：{data['out_trade_no']} 已关闭或已退款.")
-            self._set_transaction_cancel()
+            res.update(state='error', state_message='Closed or Cancelled')
+            # self._set_transaction_cancel()
         return self.write(result)
