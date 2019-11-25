@@ -59,6 +59,16 @@ class AcquirerAlipay(models.Model):
         except Exception as err:
             _logger.exception(f"生成支付宝客户端失败：{err}")
 
+    @api.multi
+    def alipay_compute_fees(self, amount, currency_id, country_id):
+        """
+            支付宝也是要恰饭的
+            单笔费率 0.6%
+        """
+        if not self.fees_active:
+            return 0.0
+        return self.fees_dom_var
+
     @api.model
     def _get_alipay_url(self, params=None):
         """Alipay URL"""
