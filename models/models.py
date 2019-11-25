@@ -67,7 +67,7 @@ class AcquirerAlipay(models.Model):
         """
         if not self.fees_active:
             return 0.0
-        return self.fees_dom_var
+        return self.fees_dom_var / 100 * amount
 
     @api.model
     def _get_alipay_url(self, params=None):
