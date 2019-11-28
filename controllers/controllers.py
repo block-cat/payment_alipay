@@ -40,7 +40,7 @@ class Alipay(http.Controller):
     @http.route('/payment/alipay/notify', csrf=False, type="http", auth='none', method=["POST"])
     def alipay_notify(self, **kwargs):
         """接收支付宝异步通知"""
-        _logger.debug(f"接收支付宝异步通知...收到的数据:{kwargs}")
+        _logger.debug("接收支付宝异步通知...收到的数据:{}".format(kwargs))
         payment = request.env["payment.acquirer"].sudo().search(
             [('provider', '=', 'alipay')], limit=1)
         result = payment._verify_pay(kwargs)

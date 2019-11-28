@@ -2,13 +2,15 @@
 
 odoo 支付宝支付模块
 
+python3.5适配版
+
 # About
 
 odoo 支付宝支付模块
 
 ## Requirements
 
-python >= 3.6
+python >= 3.5
 
 odoo == 11.0
 

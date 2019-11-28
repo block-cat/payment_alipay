@@ -57,7 +57,7 @@ class AcquirerAlipay(models.Model):
                                 sign_type=self.alipay_sign_type, sandbox=True)
             return alipay
         except Exception as err:
-            _logger.exception(f"生成支付宝客户端失败：{err}")
+            _logger.exception("生成支付宝客户端失败：{}".format(err))
 
     @api.multi
     def alipay_compute_fees(self, amount, currency_id, country_id):
@@ -76,10 +76,10 @@ class AcquirerAlipay(models.Model):
         ).get_param('web.base.url')
         # 额外的参数
         passback_params = quote_plus("&".join(
-            f"{k}={v}" for k, v in params.items() if v)) if params else None
+            "{}={}".format(k, v) for k, v in params.items() if v)) if params else None
         alipay = self._get_alipay()
-        alipay.return_url = f'{base_url}{params["return_url"]}'
-        alipay.notify_url = f'{base_url}{params["notify_url"]}'
+        alipay.return_url = '{}{}'.format(base_url, params["return_url"])
+        alipay.notify_url = '{}{}'.format(base_url, params["notify_url"])
 
         return alipay.pay.trade_page_pay(params["reference"], params["amount"],
                                          params["reference"], product_code="FAST_INSTANT_TRADE_PAY",
@@ -105,21 +105,21 @@ class AcquirerAlipay(models.Model):
         alipay = self._get_alipay()
         # 验证是否符合验签逻辑
         if not alipay.comm.validate_sign(data):
-            _logger.warn(f"支付宝推送支付结果验签失败：{data}")
+            _logger.warn("支付宝推送支付结果验签失败：{}".format(data))
             return False
         # 校验收款方
         if self.alipay_appid != data["app_id"]:
-            _logger.warn(f"支付宝推送AppID校验失败:{data['app_id']}")
+            _logger.warn("支付宝推送AppID校验失败:{}".format(data['app_id']))
             return False
         if self.seller_id != data["seller_id"]:
-            _logger.warn(f"支付宝推送卖家ID校验失败:{data['seller_id']}")
+            _logger.warn("支付宝推送卖家ID校验失败:{}".format(data['seller_id']))
             return False
         # 校验支付信息
         transaction = self.env["payment.transaction"].sudo().search(
             [('reference', '=', data["out_trade_no"])], limit=1)
         if float(transaction.amount) != float(data["total_amount"]):
             _logger.warn(
-                f"支付宝推送金额{float(transaction.amount)}与系统订单不符:{float(data['total_amount'])}")
+                "支付宝推送金额{}与系统订单不符:{}".format(float(transaction.amount), float(data['total_amount'])))
             return False
         # 将支付结果设置完成
         if transaction.state != "done" and data["trade_status"] == "TRADE_SUCCESS":
@@ -155,7 +155,7 @@ class TxAlipay(models.Model):
     def _alipay_form_validate(self, data):
         """验证支付"""
         if self.state == 'done':
-            _logger.info(f"支付已经验证：{data['out_trade_no']}")
+            _logger.info("支付已经验证：{}".format(data['out_trade_no']))
             return True
         result = {
             "acquirer_reference": data["trade_no"]
@@ -167,7 +167,7 @@ class TxAlipay(models.Model):
         res = alipay.pay.trade_query(out_trade_no=data["out_trade_no"])
         # 校验结果 send_pay_date
         if res["code"] == "10000" and res["trade_status"] in ("TRADE_SUCCESS", "TRADE_FINISHED"):
-            _logger.info(f"支付单：{data['out_trade_no']} 已成功付款")
+            _logger.info("支付单：{} 已成功付款".format(data['out_trade_no']))
             try:
                 # dateutil and pytz don't recognize abbreviations PDT/PST
                 tzinfos = {
@@ -181,11 +181,11 @@ class TxAlipay(models.Model):
             result.update(state='done', date_validate=date_validate)
             # self._set_transaction_done()
         if res["code"] == "10000" and res["trade_status"] == "WAIT_BUYER_PAY":
-            _logger.info(f"支付单：{data['out_trade_no']} 正等待付款...")
+            _logger.info("支付单：{} 正等待付款...".format(data['out_trade_no']))
             res.update(state='pending', state_message='Waiting for Pay')
             # self._set_transaction_pending()
         if res["code"] == "10000" and res["trade_status"] == "TRADE_CLOSED":
-            _logger.info(f"支付单：{data['out_trade_no']} 已关闭或已退款.")
+            _logger.info("支付单：{} 已关闭或已退款.".format(data['out_trade_no']))
             res.update(state='error', state_message='Closed or Cancelled')
             # self._set_transaction_cancel()
         return self.write(result)
