@@ -123,6 +123,16 @@ class AcquirerAlipay(models.Model):
         if transaction.state != "done" and data["trade_status"] == "TRADE_SUCCESS":
             transaction.acquirer_reference = data["trade_no"]
             transaction._set_transaction_done()
+            # 完成付款单
+            sale_order = self.env['sale.order'].search(
+                [('name', '=', data["out_trade_no"])], limit=1)
+            if sale_order:
+                elect = self.env.ref(
+                    'payment.account_payment_method_electronic_in').id
+                sale_order.custom_payment_id.payment_method_id = elect
+                sale_order.custom_payment_id.payment_transaction_id = self.id
+                sale_order.custom_payment_id.post()
+
         return True
 
 
@@ -176,4 +186,14 @@ class TxAlipay(models.Model):
         if res["code"] == "10000" and res["trade_status"] == "TRADE_CLOSED":
             _logger.info(f"支付单：{data['out_trade_no']} 已关闭或已退款.")
             self._set_transaction_cancel()
+        # 完成付款单
+        sale_order = self.env['sale.order'].search(
+            [('name', '=', data["out_trade_no"])], limit=1)
+        if sale_order:
+            elect = self.env.ref(
+                'payment.account_payment_method_electronic_in').id
+            sale_order.custom_payment_id.payment_method_id = elect
+            sale_order.custom_payment_id.payment_transaction_id = self.id
+            sale_order.custom_payment_id.post()
+
         return self.write(result)
