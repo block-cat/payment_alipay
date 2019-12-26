@@ -47,7 +47,7 @@ class AcquirerAlipay(models.Model):
             public_key = RSA.importKey(base64.b64decode(
                 self.alipay_public_key).decode('utf-8'))
 
-            if self.environment == "prod":
+            if self.state == "enabled":
                 alipay = AliPay(self.alipay_appid, private_key, ali_public_key=public_key,
                                 sign_type=self.alipay_sign_type)
             else:
@@ -73,7 +73,7 @@ class AcquirerAlipay(models.Model):
                                          params["reference"], product_code="FAST_INSTANT_TRADE_PAY",
                                          passback_params=passback_params)
 
-    @api.multi
+    @api.model
     def alipay_compute_fees(self, amount, currency_id, country_id):
         """
             支付宝也是要恰饭的
@@ -83,11 +83,11 @@ class AcquirerAlipay(models.Model):
             return 0.0
         return self.fees_dom_var / 100 * amount
 
-    @api.multi
+    @api.model
     def alipay_get_form_action_url(self):
         return "/payment_alipay/jump"
 
-    @api.multi
+    @api.model
     def alipay_form_generate_values(self, values):
         alipay_tx_values = dict(values)
         alipay_tx_values.update({
@@ -149,7 +149,7 @@ class TxAlipay(models.Model):
             raise ValidationError(error_msg)
         return txs[0]
 
-    @api.multi
+    @api.model
     def _alipay_form_validate(self, data):
         """验证支付"""
         if self.state == 'done':
@@ -166,7 +166,10 @@ class TxAlipay(models.Model):
         # 校验结果
         if res["code"] == "10000" and res["trade_status"] in ("TRADE_SUCCESS", "TRADE_FINISHED"):
             _logger.info(f"支付单：{data['out_trade_no']} 已成功付款")
+            date_validate = fields.Datetime.now()
+            res.update(date=date_validate)
             self._set_transaction_done()
+            self.execute_callback()
         if res["code"] == "10000" and res["trade_status"] == "WAIT_BUYER_PAY":
             _logger.info(f"支付单：{data['out_trade_no']} 正等待付款...")
             self._set_transaction_pending()
