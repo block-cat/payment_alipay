@@ -31,5 +31,10 @@
     'demo': [
         'demo/demo.xml',
     ],
-    "application":True
+    'images':['images/alipay.png'],
+    "price": "20",
+    "currency": 'USD',
+    "application":True,
+    'support': 'kfx2007@163.com',
+    "license": "OPL-1",
 }
