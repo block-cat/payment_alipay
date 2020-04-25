@@ -26,3 +26,7 @@ git clone https://github.com/block-cat/payment_alipay
 ## 使用示例
 
 ![demo](static/src/image/x.gif)
+
+## 技术支持
+
+本模块为开源模块，技术支持请联系kfx2007@163.com，仅限付费用户。

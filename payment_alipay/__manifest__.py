@@ -5,10 +5,11 @@
     'summary': """支付宝集成支付""",
 
     'description': """
-        支付宝集成支付
+        本模块为支付宝支付模块，支持中国大陆商户使用。
+        官方模块为支付宝国际版，与本模块不兼容，请用户根据自己情况选择其中一个版本使用。
     """,
     'author': "black-cat",
-    'website': "http://mixoo.cn",
+    'website': "http://www.odoomommy.com",
 
     # Categories can be used to filter modules in modules listing
     # Check https://github.com/odoo/odoo/blob/12.0/odoo/addons/base/data/ir_module_category_data.xml
