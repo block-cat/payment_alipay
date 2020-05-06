@@ -5,12 +5,13 @@ odoo 支付宝支付模块
 # About
 
 odoo 支付宝支付模块
+本模块不兼容官方支付宝模块，请先删除官方模块再安装
 
 ## Requirements
 
 python >= 3.6
 
-odoo == 12.0
+odoo == 13.0
 
 ## Main functionalities
 
